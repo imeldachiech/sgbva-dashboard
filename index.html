@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SGBVA Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #D4A017;
+      --gold-light: #F5C842;
+      --bg-base: #0f0f0f;
+      --bg-card: #1a1a1a;
+      --border: rgba(212,160,23,0.25);
+      --border-hover: rgba(212,160,23,0.6);
+      --text-main: #f0ece0;
+      --text-muted: #888;
+      --radius: 12px;
+      --font-head: 'Playfair Display', Georgia, serif;
+      --font-body: 'DM Sans', 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: linear-gradient(135deg, #111 60%, #1c1600);
+      border-bottom: 1px solid var(--border);
+      padding: 2rem 2rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .header-left h1 {
+      font-family: var(--font-head);
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: 0.02em;
+    }
+    .header-left p { font-size: 0.9rem; color: var(--text-muted); margin-top: 4px; }
+    .header-badge {
+      background: var(--gold);
+      color: #111;
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 4px 14px;
+      border-radius: 20px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* ── NAV ── */
+    .nav {
+      display: flex;
+      gap: 6px;
+      padding: 1.2rem 2rem;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+    .nav-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      padding: 7px 18px;
+      border-radius: 20px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover, .nav-btn.active {
+      background: var(--gold);
+      color: #111;
+      border-color: var(--gold);
+      font-weight: 500;
+    }
+
+    /* ── CONTENT ── */
+    .content { padding: 1.8rem 2rem; max-width: 1100px; }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .section-title {
+      font-family: var(--font-head);
+      font-size: 1.35rem;
+      color: var(--gold-light);
+      margin-bottom: 1.2rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .edit-hint {
+      background: rgba(212,160,23,0.07);
+      border: 1px dashed var(--border-hover);
+      border-radius: 10px;
+      padding: 0.9rem 1.1rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .edit-hint strong { color: var(--gold); }
+
+    /* ── WEEK CARDS ── */
+    .week-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+    .week-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.2rem;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .week-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
+    .week-card.expanded { border-color: var(--gold); }
+    .week-card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .week-label {
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .week-title { font-family: var(--font-head); font-size: 1.05rem; color: var(--text-main); margin-top: 4px; }
+    .week-dates { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; }
+    .week-chevron { color: var(--gold); font-size: 0.85rem; transition: transform 0.2s; margin-top: 4px; }
+    .week-card.expanded .week-chevron { transform: rotate(90deg); }
+    .week-body { display: none; margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 0.9rem; }
+    .week-card.expanded .week-body { display: block; }
+
+    .task-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .task-row:last-child { border-bottom: none; }
+    .task-icon {
+      width: 22px; height: 22px;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 600;
+      flex-shrink: 0; margin-top: 1px;
+    }
+    .icon-task { background: rgba(212,160,23,0.15); color: var(--gold); }
+    .icon-meet { background: rgba(55,138,221,0.15); color: #5aadff; }
+    .icon-note { background: rgba(29,158,117,0.15); color: #3dcca0; }
+    .task-text { font-size: 0.83rem; color: var(--text-main); line-height: 1.5; }
+    .task-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+    .chip {
+      display: inline-block;
+      font-size: 0.68rem;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-top: 4px;
+    }
+    .chip-due { background: rgba(212,160,23,0.15); color: var(--gold); }
+
+    /* ── MEETING LINKS ── */
+    .links-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 14px;
+    }
+    .link-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.2rem;
+    }
+    .link-card-type {
+      font-size: 0.68rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .link-card-title { font-size: 0.95rem; font-weight: 500; color: var(--text-main); margin-bottom: 10px; }
+    .link-btn {
+      display: inline-block;
+      background: var(--gold);
+      color: #111;
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      font-weight: 500;
+      padding: 7px 18px;
+      border-radius: 8px;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: background 0.2s;
+    }
+    .link-btn:hover { background: var(--gold-light); }
+
+    /* ── FILES ── */
+    .files-section { margin-bottom: 2rem; }
+    .files-cat-title {
+      font-size: 0.8rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+    .file-list { display: flex; flex-direction: column; gap: 8px; }
+    .file-row {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.8rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      transition: border-color 0.2s;
+    }
+    .file-row:hover { border-color: var(--border-hover); }
+    .file-meta { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .file-icon {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .fi-pdf { background: rgba(226,75,74,0.15); color: #ff6b6a; }
+    .fi-doc { background: rgba(55,138,221,0.15); color: #5aadff; }
+    .fi-vid { background: rgba(212,160,23,0.15); color: var(--gold); }
+    .fi-img { background: rgba(29,158,117,0.15); color: #3dcca0; }
+    .file-name { font-size: 0.85rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .file-size { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+    .dl-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      padding: 5px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      font-family: var(--font-body);
+      text-decoration: none;
+      transition: all 0.2s;
+      display: inline-block;
+    }
+    .dl-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ── ANNOUNCEMENTS ── */
+    .announce-list { display: flex; flex-direction: column; gap: 10px; }
+    .announce-card {
+      background: var(--bg-card);
+      border-left: 3px solid var(--gold);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 1rem 1.2rem;
+    }
+    .announce-date { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px; }
+    .announce-title { font-size: 0.95rem; font-weight: 500; color: var(--text-main); }
+    .announce-body { font-size: 0.82rem; color: var(--text-muted); margin-top: 5px; line-height: 1.6; }
+
+    @media (max-width: 600px) {
+      .header { padding: 1.2rem 1rem; }
+      .header-left h1 { font-size: 1.4rem; }
+      .nav { padding: 0.8rem 1rem; }
+      .content { padding: 1.2rem 1rem; }
+      .week-grid { grid-template-columns: 1fr; }
+      .links-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="header-left">
+      <h1>SGBVA Dashboard</h1>
+      <p>Your one-stop hub for everything in the course</p>
+    </div>
+    <div class="header-badge">Welcome, Goldies</div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn active" onclick="showSection('calendar', this)">Weekly Calendar</button>
+    <button class="nav-btn" onclick="showSection('meetings', this)">Meeting Links</button>
+    <button class="nav-btn" onclick="showSection('files', this)">Files &amp; Resources</button>
+    <button class="nav-btn" onclick="showSection('announcements', this)">Announcements</button>
+  </div>
+
+  <div class="content">
+
+    <!-- CALENDAR -->
+    <div class="section active" id="sec-calendar">
+      <div class="section-title">Course Calendar — Week by Week</div>
+      <div class="edit-hint">
+        <strong>For teacher:</strong> Find the <code>weeks</code> array in the script below and update the dates, topics, task names, and due dates for each week.
+      </div>
+      <div class="week-grid" id="week-grid"></div>
+    </div>
+
+    <!-- MEETINGS -->
+    <div class="section" id="sec-meetings">
+      <div class="section-title">Meeting Links</div>
+      <div class="edit-hint">
+        <strong>For teacher:</strong> Find the <code>meetings</code> array in the script and replace each <code>href: "#"</code> with your real Zoom or Google Meet link.
+      </div>
+      <div class="links-grid" id="links-grid"></div>
+    </div>
+
+    <!-- FILES -->
+    <div class="section" id="sec-files">
+      <div class="section-title">Files &amp; Resources</div>
+      <div class="edit-hint">
+        <strong>For teacher:</strong> Find the <code>fileCats</code> array in the script and replace each <code>href: "#"</code> with your actual Google Drive or direct download link.
+      </div>
+      <div id="files-content"></div>
+    </div>
+
+    <!-- ANNOUNCEMENTS -->
+    <div class="section" id="sec-announcements">
+      <div class="section-title">Announcements</div>
+      <div class="edit-hint">
+        <strong>For teacher:</strong> Find the <code>announcements</code> array in the script and add, edit, or remove entries as needed.
+      </div>
+      <div class="announce-list" id="announce-list"></div>
+    </div>
+
+  </div>
+
+  <script>
+    /* ============================================================
+       DATA — Edit this section to customise your dashboard
+    ============================================================ */
+
+    const weeks = [
+      {
+        num: 1,
+        title: "Course Introduction",
+        dates: "12 – 16 May 2025",
+        tasks: [
+          { type: "note", label: "Topic",        text: "Welcome & Course Overview",     sub: "Understanding what SGBVA is about" },
+          { type: "meet", label: "Weekly Meeting", text: "Monday, 10:00 AM — Zoom",      sub: "Link in Meeting Links tab" },
+          { type: "task", label: "Task 1",        text: "Introductory Self-Profile",     sub: "Due: Friday 16 May", chip: "due" }
+        ]
+      },
+      {
+        num: 2,
+        title: "Core Concepts",
+        dates: "19 – 23 May 2025",
+        tasks: [
+          { type: "note", label: "Topic",         text: "Foundations & Key Terminology" },
+          { type: "meet", label: "Weekly Meeting", text: "Monday, 10:00 AM — Zoom" },
+          { type: "meet", label: "Mini Meeting",   text: "Wednesday, 3:00 PM — Google Meet" },
+          { type: "task", label: "Task 2",         text: "Concept Map Activity",          sub: "Due: Friday 23 May", chip: "due" }
+        ]
+      },
+      {
+        num: 3,
+        title: "Developing Skills",
+        dates: "26 – 30 May 2025",
+        tasks: [
+          { type: "note", label: "Topic",         text: "Skill-building Workshop" },
+          { type: "meet", label: "Weekly Meeting", text: "Monday, 10:00 AM — Zoom" },
+          { type: "task", label: "Task 3",         text: "Practical Exercise A",           sub: "Due: Friday 30 May", chip: "due" }
+        ]
+      },
+      {
+        num: 4,
+        title: "Application",
+        dates: "2 – 6 Jun 2025",
+        tasks: [
+          { type: "note", label: "Topic",         text: "Applying Concepts to Real Scenarios" },
+          { type: "meet", label: "Weekly Meeting", text: "Monday, 10:00 AM — Zoom" },
+          { type: "meet", label: "Mini Meeting",   text: "Wednesday, 3:00 PM — Google Meet" },
+          { type: "task", label: "Task 4",         text: "Case Study Response",             sub: "Due: Friday 6 Jun", chip: "due" }
+        ]
+      },
+      {
+        num: 5,
+        title: "Review & Refinement",
+        dates: "9 – 13 Jun 2025",
+        tasks: [
+          { type: "note", label: "Topic",         text: "Review, Feedback & Improvement" },
+          { type: "meet", label: "Weekly Meeting", text: "Monday, 10:00 AM — Zoom" },
+          { type: "task", label: "Task 5",         text: "Revised Draft Submission",        sub: "Due: Friday 13 Jun", chip: "due" }
+        ]
+      },
+      {
+        num: 6,
+        title: "Final Showcase",
+        dates: "16 – 20 Jun 2025",
+        tasks: [
+          { type: "note", label: "Topic",         text: "Final Presentations & Wrap-up" },
+          { type: "meet", label: "Final Meeting",  text: "Monday, 10:00 AM — Zoom" },
+          { type: "task", label: "Final Task",     text: "Portfolio / Final Submission",    sub: "Due: Friday 20 Jun", chip: "due" }
+        ]
+      }
+    ];
+
+    const meetings = [
+      { type: "Weekly Meeting", title: "Monday Weekly Meeting — All Weeks",          href: "#" },
+      { type: "Mini Meeting",   title: "Week 2 Mini Meeting (Wednesday)",             href: "#" },
+      { type: "Mini Meeting",   title: "Week 4 Mini Meeting (Wednesday)",             href: "#" },
+      { type: "Extra Support",  title: "One-to-One Consultation (by appointment)",   href: "#" }
+    ];
+
+    const fileCats = [
+      {
+        cat: "Weekly Meeting Notes & Slides",
+        files: [
+          { name: "Week 1 — Course Introduction Slides",    ext: "PDF", size: "1.2 MB", href: "#" },
+          { name: "Week 2 — Core Concepts Slides",          ext: "PDF", size: "1.5 MB", href: "#" },
+          { name: "Week 3 — Skill Workshop Slides",         ext: "PDF", size: "1.3 MB", href: "#" },
+          { name: "Week 4 — Application Session Slides",    ext: "PDF", size: "1.4 MB", href: "#" },
+          { name: "Week 5 — Review Session Slides",         ext: "PDF", size: "1.1 MB", href: "#" },
+          { name: "Week 6 — Final Showcase Slides",         ext: "PDF", size: "1.0 MB", href: "#" }
+        ]
+      },
+      {
+        cat: "Mini Meeting Materials",
+        files: [
+          { name: "Mini Meeting 1 (Week 2) — Worksheet",   ext: "DOC", size: "450 KB", href: "#" },
+          { name: "Mini Meeting 2 (Week 4) — Worksheet",   ext: "DOC", size: "480 KB", href: "#" }
+        ]
+      },
+      {
+        cat: "Task Instructions",
+        files: [
+          { name: "Task 1 — Introductory Self-Profile Instructions", ext: "PDF", size: "300 KB", href: "#" },
+          { name: "Task 2 — Concept Map Instructions",               ext: "PDF", size: "280 KB", href: "#" },
+          { name: "Task 3 — Practical Exercise A Instructions",      ext: "PDF", size: "320 KB", href: "#" },
+          { name: "Task 4 — Case Study Instructions",                ext: "PDF", size: "350 KB", href: "#" },
+          { name: "Task 5 — Revised Draft Instructions",             ext: "PDF", size: "290 KB", href: "#" },
+          { name: "Final Task — Portfolio Instructions",             ext: "PDF", size: "500 KB", href: "#" }
+        ]
+      },
+      {
+        cat: "Sample Good Work (For Reference)",
+        files: [
+          { name: "Sample — Excellent Self-Profile (Task 1)",  ext: "PDF", size: "600 KB", href: "#" },
+          { name: "Sample — Excellent Concept Map (Task 2)",   ext: "IMG", size: "800 KB", href: "#" },
+          { name: "Sample — Excellent Final Portfolio",        ext: "PDF", size: "2.1 MB", href: "#" }
+        ]
+      }
+    ];
+
+    const announcements = [
+      {
+        date: "16 Apr 2026",
+        title: "Welcome to SGBVA!",
+        body: "Hello Goldies! This dashboard has everything you need — calendar, meeting links, and all your files. Bookmark this page for easy access."
+      },
+      {
+        date: "15 Apr 2026",
+        title: "Week 1 materials are now available",
+        body: "Slides and Task 1 instructions have been uploaded to the Files & Resources section. Please read before our first Monday meeting."
+      },
+      {
+        date: "10 Apr 2026",
+        title: "Reminder: Check the meeting links tab",
+        body: "All Zoom and Google Meet links are listed under Meeting Links. Please test your link before the session begins."
+      }
+    ];
+
+    /* ============================================================
+       RENDER FUNCTIONS — No need to edit below this line
+    ============================================================ */
+
+    function iconType(type) {
+      if (type === "task") return { cls: "icon-task", sym: "T" };
+      if (type === "meet") return { cls: "icon-meet", sym: "M" };
+      return { cls: "icon-note", sym: "i" };
+    }
+
+    function buildCalendar() {
+      const grid = document.getElementById("week-grid");
+      weeks.forEach((w, i) => {
+        const card = document.createElement("div");
+        card.className = "week-card";
+        const tasksHtml = w.tasks.map(t => {
+          const ic = iconType(t.type);
+          return `<div class="task-row">
+            <div class="task-icon ${ic.cls}">${ic.sym}</div>
+            <div>
+              <div class="task-text"><strong>${t.label}:</strong> ${t.text}</div>
+              ${t.sub ? `<div class="task-sub">${t.sub}</div>` : ""}
+              ${t.chip === "due" ? `<span class="chip chip-due">Upcoming</span>` : ""}
+            </div>
+          </div>`;
+        }).join("");
+        card.innerHTML = `
+          <div class="week-card-header">
+            <div>
+              <div class="week-label">Week ${w.num}</div>
+              <div class="week-title">${w.title}</div>
+              <div class="week-dates">${w.dates}</div>
+            </div>
+            <span class="week-chevron">&#9654;</span>
+          </div>
+          <div class="week-body">${tasksHtml}</div>`;
+        card.addEventListener("click", () => card.classList.toggle("expanded"));
+        grid.appendChild(card);
+      });
+    }
+
+    function buildMeetings() {
+      const grid = document.getElementById("links-grid");
+      meetings.forEach(m => {
+        const card = document.createElement("div");
+        card.className = "link-card";
+        card.innerHTML = `
+          <div class="link-card-type">${m.type}</div>
+          <div class="link-card-title">${m.title}</div>
+          <a class="link-btn" href="${m.href}" target="_blank" rel="noopener">Join Meeting</a>`;
+        grid.appendChild(card);
+      });
+    }
+
+    function fileIconCls(ext) {
+      if (ext === "PDF") return "fi-pdf";
+      if (ext === "DOC") return "fi-doc";
+      if (ext === "VID") return "fi-vid";
+      return "fi-img";
+    }
+
+    function buildFiles() {
+      const cont = document.getElementById("files-content");
+      fileCats.forEach(fc => {
+        const sec = document.createElement("div");
+        sec.className = "files-section";
+        const rows = fc.files.map(f => `
+          <div class="file-row">
+            <div class="file-meta">
+              <div class="file-icon ${fileIconCls(f.ext)}">${f.ext}</div>
+              <div>
+                <div class="file-name">${f.name}</div>
+                <div class="file-size">${f.size}</div>
+              </div>
+            </div>
+            <a class="dl-btn" href="${f.href}" target="_blank" rel="noopener">Download</a>
+          </div>`).join("");
+        sec.innerHTML = `<div class="files-cat-title">${fc.cat}</div><div class="file-list">${rows}</div>`;
+        cont.appendChild(sec);
+      });
+    }
+
+    function buildAnnouncements() {
+      const list = document.getElementById("announce-list");
+      announcements.forEach(a => {
+        const card = document.createElement("div");
+        card.className = "announce-card";
+        card.innerHTML = `
+          <div class="announce-date">${a.date}</div>
+          <div class="announce-title">${a.title}</div>
+          <div class="announce-body">${a.body}</div>`;
+        list.appendChild(card);
+      });
+    }
+
+    function showSection(id, btn) {
+      document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+      document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById("sec-" + id).classList.add("active");
+      btn.classList.add("active");
+    }
+
+    buildCalendar();
+    buildMeetings();
+    buildFiles();
+    buildAnnouncements();
+  </script>
+
+</body>
+</html>
